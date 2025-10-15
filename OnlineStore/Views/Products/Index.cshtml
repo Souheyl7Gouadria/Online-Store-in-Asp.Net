@@ -2,6 +2,9 @@
 @{
     int pageIndex = (int)ViewData["PageIndex"]!;
     int totalPages = (int)ViewData["TotalPages"]!;
+    string search = (string)ViewData["Search"]!;
+    string column = (string)ViewData["Column"]!;
+    string orderBy = (string)ViewData["OrderBy"]!;
 }
 
 <h2 class="text-center mb-5">List of Products</h2>
@@ -10,21 +13,44 @@
         <a class="btn btn-primary btn-sm" asp-controller="Products" asp-action="Create">New Product</a>
     </div>
     <div class="col">
-
+        <form class="d-flex" role="search">
+            <input class="form-control me-2" type="search" name="search" value="@search" placeholder="Search" aria-label="Search"/>
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
     </div>
 </div>
+
+<script>
+    function sortTable(column){
+        let orderBy = "asc";
+        let currentColumn = "@column";
+        let currentOrder = "@orderBy";
+        
+        if (column === currentColumn){
+            orderBy = currentOrder === "desc" ? "asc" : "desc";
+        }
+        
+        let url = '?';
+        if ('@search' !== '') {
+            url += 'search=@(search)&';
+        }
+        url += 'column=' + column + '&orderBy=' + orderBy;
+        
+        window.location.href = url;
+    }
+</script>
 
 
 <table class="table">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Brand</th>
-            <th>Category</th>
-            <th>Price</th>
+            <th style="cursor: pointer;">ID</th>
+            <th style="cursor: pointer;" onclick="sortTable('Name')">Name</th>
+            <th style="cursor: pointer;" onclick="sortTable('Brand')">Brand</th>
+            <th style="cursor: pointer;" onclick="sortTable('Category')">Category</th>
+            <th style="cursor: pointer;" onclick="sortTable('Price')">Price</th>
             <th>Image</th>
-            <th>Created at</th>
+            <th style="cursor: pointer;" onclick="sortTable('CreatedAt')">Created at</th>
             <th>Action</th>
         </tr>
     </thead>
@@ -64,7 +90,11 @@
             string active = "";
             if (i == pageIndex) active = "active";
             <li class="page-item @active">
-                <a class="page-link" asp-route-pageIndex="@i">@i</a>
+                <a class="page-link" 
+                   asp-route-pageIndex="@i" 
+                   asp-route-search="@search"
+                   asp-route-column="@column"
+                   asp-route-orderBy="@orderBy">@i</a>
             </li>
         }
     </ul>

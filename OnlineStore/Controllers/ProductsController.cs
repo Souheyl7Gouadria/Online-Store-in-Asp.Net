@@ -17,10 +17,25 @@ namespace OnlineStore.Controllers
             _environment = environment;
         }
 
-        public async Task<IActionResult> Index(int pageIndex)
+        public async Task<IActionResult> Index(int pageIndex, string? search, string? column, string? orderBy)
         {
             IQueryable<Product> query = _context.Products;
-            query = query.OrderBy(p => p.Name);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                var searchTerm = search.ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(searchTerm) ||
+                                        p.Brand.ToLower().Contains(searchTerm));
+            }
+
+            string[] validColumns = {"Name", "Brand", "Category", "Price", "CreatedAt"};
+            string[] validOrderBy = {"asc", "desc"};
+
+            if (!validColumns.Contains(column)) column = "Name";
+            if (!validOrderBy.Contains(orderBy)) orderBy = "asc";
+
+            query = ApplySorting(query, column, orderBy);
+
             if (pageIndex < 1) pageIndex = 1;
 
             decimal count = await query.CountAsync();
@@ -31,7 +46,23 @@ namespace OnlineStore.Controllers
 
             ViewData["PageIndex"] = pageIndex;
             ViewData["TotalPages"] = totalPages;
+            ViewData["Search"] = search ?? "";
+            ViewData["Column"] = column;
+            ViewData["OrderBy"] = orderBy;
             return View(products);
+        }
+
+        private IQueryable<Product> ApplySorting(IQueryable<Product> query, string column, string orderBy)
+        {
+            return column switch
+            {
+                "Name" => orderBy == "asc" ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name),
+                "Brand" => orderBy == "asc" ? query.OrderBy(p => p.Brand) : query.OrderByDescending(p => p.Brand),
+                "Category" => orderBy == "asc" ? query.OrderBy(p => p.Category) : query.OrderByDescending(p => p.Category),
+                "Price" => orderBy == "asc" ? query.OrderBy(p => p.Price) : query.OrderByDescending(p => p.Price),
+                "CreatedAt" => orderBy == "asc" ? query.OrderBy(p => p.CreatedAt) : query.OrderByDescending(p => p.CreatedAt),
+                _ => query.OrderBy(p => p.Name)
+            };
         }
 
         public IActionResult Create()
