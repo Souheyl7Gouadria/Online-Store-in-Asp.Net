@@ -5,6 +5,7 @@ using OnlineStore.Models;
 
 namespace OnlineStore.Controllers
 {
+    [Route("/Admin/[controller]/{action=Index}/{id?}")]
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -31,7 +32,7 @@ namespace OnlineStore.Controllers
             string[] validColumns = {"Name", "Brand", "Category", "Price", "CreatedAt"};
             string[] validOrderBy = {"asc", "desc"};
 
-            if (!validColumns.Contains(column)) column = "Name";
+            if (!validColumns.Contains(column)) column = "Brand";
             if (!validOrderBy.Contains(orderBy)) orderBy = "asc";
 
             query = ApplySorting(query, column, orderBy);
