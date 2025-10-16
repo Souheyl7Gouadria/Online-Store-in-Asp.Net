@@ -1,21 +1,23 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using OnlineStore.Data;
 using OnlineStore.Models;
 
 namespace OnlineStore.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _applicationDbContext;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext applicationDbContext)
         {
-            _logger = logger;
+            _applicationDbContext = applicationDbContext;   
         }
 
         public IActionResult Index()
         {
-            return View();
+            var products = _applicationDbContext.Products.OrderByDescending(p => p.CreatedAt).Take(4).ToList();
+            return View(products);
         }
 
         public IActionResult Privacy()
