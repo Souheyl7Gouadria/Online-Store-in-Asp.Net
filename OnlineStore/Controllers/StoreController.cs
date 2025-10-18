@@ -70,5 +70,15 @@ namespace OnlineStore.Controllers
             };
             return View(storeSearchModel);
         }
+
+        public async Task<IActionResult> Details(Guid id)
+        {
+            var product = await _applicationDbContext.Products.FindAsync(id);
+            if (product == null)
+            {
+                return RedirectToAction("Index", "Store");
+            }
+            return View(product);
+        }
     }
 }
