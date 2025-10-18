@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using OnlineStore.Data;
 using OnlineStore.Models;
 
@@ -13,10 +14,41 @@ namespace OnlineStore.Controllers
         {
             _applicationDbContext = applicationDbContext;
         }
-        public async Task<IActionResult> Index(int pageIndex)
+        public async Task<IActionResult> Index(int pageIndex, string? search, string? brand, string? category, string? sort)
         {
             IQueryable<Product> query = _applicationDbContext.Products;
-            query.OrderByDescending(p => p.CreatedAt);
+
+            // search functionality
+            if (!string.IsNullOrEmpty(search))
+            {
+                search.ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(search.ToLower()));
+            }
+
+            // filter functionality
+            if (!string.IsNullOrEmpty(brand))
+            {
+                query = query.Where(p => p.Brand.ToLower().Contains(brand.ToLower()));
+            }
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(p => p.Category.ToLower().Contains(category.ToLower()));
+            }
+
+            // sort functionality
+            if (sort == "price-asc")
+            {
+                query = query.OrderBy(p => p.Price);
+            }
+            else if (sort == "price-desc")
+            {
+                query = query.OrderByDescending(p => p.Price);
+            }
+            else
+            {
+                // newest products first
+                query = query.OrderByDescending(p => p.CreatedAt);
+            }
             
             if (pageIndex < 1) pageIndex = 1;
             decimal count = await query.CountAsync();
@@ -28,7 +60,15 @@ namespace OnlineStore.Controllers
             ViewBag.Products = products;
             ViewBag.PageIndex = pageIndex;
             ViewBag.NumberOfPages = numberOfPages;
-            return View();
+
+            var storeSearchModel = new StoreSearchModel()
+            {
+                Search = search,
+                Brand = brand,
+                Category = category,
+                Sort = sort
+            };
+            return View(storeSearchModel);
         }
     }
 }
